@@ -1,0 +1,20 @@
+{
+  "name": "alerts-js",
+  "version": "1.0.0",
+  "description": "Javascript alerts notification",
+  "main": "notification.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/mocha ./js/tests/*-spec.js"
+  },
+  "author": "Oumar KONATE <konatoumar@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "jsdom": "^11.12.0",
+    "mocha": "^5.2.0",
+    "sinon": "^6.1.4"
+  }
+}
