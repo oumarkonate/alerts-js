@@ -1,6 +1,8 @@
+const config = require('./config');
+
 class Notification {
   constructor () {
-    this.timeout = 5000;
+    this.timeout = config.timeout;
     this.notifContainer = document.getElementById('notif-container');
 
     this.addNotificationsEventListeners();
@@ -91,7 +93,7 @@ class Notification {
     document.body.appendChild(this.notifContainer);
 
     // Add timeout to delete notification box
-    setTimeout(() => {
+    setTimeout(() => { 
       this.deleteNotification();
     }, this.timeout);
   }
