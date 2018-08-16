@@ -10,18 +10,8 @@ describe('#Test Notification', () => {
         expect = chai.expect,
         dom = new JSDOM('');        
 
-  let notification, 
-      stubQuerySelector;
-
   window = dom.window;
   document = dom.window.document;
-
-  beforeEach(() => {
-    stubQuerySelector = sandBox.stub(document, 'querySelector');
-    sandBox.stub(Notification.prototype, 'addNotificationsEventListeners');
-    
-    notification = new Notification();
-  });
 
   afterEach(() => {
     if (sandBox.restore) {
@@ -29,41 +19,48 @@ describe('#Test Notification', () => {
     }
   });
 
-  it('Should test constructor', () => {
-    expect(notification).to.have.property('timeout').to.equal(5000);
-    expect(notification).to.have.property('notifContainer');
-    expect(notification.addNotificationsEventListeners.calledOnce).to.be.true;
+  describe('#Test constructor', () => {
+    before(() => {
+      sandBox.stub(Notification.prototype, 'addNotificationsEventListeners');
+    });
+
+    it('Should test constructor property', () => {
+      const notification = new Notification();
+
+      expect(notification).to.have.property('timeout').to.equal(5000);
+      expect(notification).to.have.property('notifContainer');
+      expect(notification.addNotificationsEventListeners.calledOnce).to.be.true;
+    });
   });
 
   describe('#Test notifyUser', () => {
-    context('When event message is empty', () => {
+    describe('When event message is empty', () => {
+      before(() => {
+        sandBox.stub(Notification.prototype, 'addNotificationsEventListeners');
+      });
+
       it('Should return', () => {
+        const notification = new Notification();
+
         expect(notification.notifyUser({})).to.be.an('undefined');
       });
     });
 
     describe('When event message is not empty', () => {
-      let stubAddEventListener;
+      let stubQuerySelector;
 
       beforeEach(() => {
-        stubQuerySelector.withArgs('.notif-container-close');
-        stubAddEventListener = sandBox.stub(window, 'addEventListener');
-        sandBox.stub(notification, 'deleteNotification');
-        sandBox.stub(notification, 'createNotificationBox');
-        sandBox.stub(notification, 'resizeNotification');
+        stubQuerySelector = sandBox.stub(document, 'querySelector').withArgs('.notif-container-close');
+        sandBox.stub(Notification.prototype, 'addNotificationsEventListeners');
+        sandBox.stub(Notification.prototype, 'resizeNotification');
+
+        stubQuerySelector.returns({addEventListener: sandBox.spy()});
       });
 
-      afterEach(() => {
-        if (sandBox.restore) {
-          sandBox.restore();
-        }
-      });
-
-      context('When timeout is specified', () => {
+      describe('When timeout is specified', () => {
         it('Should test method notifyUser', () => {
           const event = {message: 'Une erreur est survenue, veuillez réessayer dans quelques instants', timeout: 1000};
-
-          stubQuerySelector.returns({addEventListener: sandBox.spy()});
+          const notification = new Notification();
 
           notification.notifyUser(event);
 
@@ -72,11 +69,10 @@ describe('#Test Notification', () => {
         });
       });
 
-      context('When timeout not is specified', () => {
+      describe('When timeout not is specified', () => {
         it('Should test method notifyUser', () => {
           const event = {message: 'Une erreur est survenue, veuillez réessayer dans quelques instants'};
-
-          stubQuerySelector.returns({addEventListener: sandBox.spy()});
+          const notification = new Notification();
 
           notification.notifyUser(event);
 
@@ -88,24 +84,36 @@ describe('#Test Notification', () => {
   });
 
   describe('#Test resizeNotification', () => {
-    it('#Should test resizeNotification', () => {
+    let stubQuerySelector;
+
+    before(() => {
+      stubQuerySelector = sandBox.stub(document, 'querySelector').withArgs('.notif-container-content');
+      sandBox.stub(Notification.prototype, 'addNotificationsEventListeners');
+
       stubQuerySelector.withArgs('.notif-container').returns({clientHeight: 6, style: {}});
       stubQuerySelector.withArgs('.notif-container-content').returns({clientHeight: 2, style: {}});
+    });
 
-      const element = document.querySelector('.notif-container-content');
+    it('#Should test resizeNotification', () => {
+      const notification = new Notification();
 
       notification.resizeNotification();
 
-      expect(element.style.position).to.equal('relative');
-      expect(element.style.top).to.equal('2px');
+      expect(document.querySelector('.notif-container-content').style.position).to.equal('relative');
+      expect(document.querySelector('.notif-container-content') .style.top).to.equal('2px');
     });
   });
 
   describe('#Test deleteNotification', () => {
-    context('When document body contains notifContainer', () => {
-      it('Should test deleteNotification ', () => {
+    describe('When document body contains notifContainer', () => {
+      before(() => {
         sandBox.stub(document.body, 'contains').returns(true);
         sandBox.stub(document.body, 'removeChild');
+        sandBox.stub(Notification.prototype, 'addNotificationsEventListeners');
+      });
+
+      it('Should test deleteNotification ', () => {
+        const notification = new Notification();
 
         notification.deleteNotification();
 
@@ -113,9 +121,14 @@ describe('#Test Notification', () => {
       });
     });
 
-    context('When document body not contains notifContainer', () => {
-      it('Should test deleteNotification', () => {
+    describe('When document body not contains notifContainer', () => {
+      before(() => {
         sandBox.stub(document, 'body').returns(null);
+        sandBox.stub(Notification.prototype, 'addNotificationsEventListeners');
+      });
+
+      it('Should test deleteNotification', () => {
+        const notification = new Notification();
 
         expect(notification.deleteNotification()).to.be.an('undefined');
       });
@@ -123,15 +136,18 @@ describe('#Test Notification', () => {
   });
 
   describe('#Test createNotificationBox', () => {
-    it('#Sould test createNotificationBox', () => {
-      Notification.prototype.message = 'Une erreur est survenue, veuillez réessayer dans quelques instants';
-
+    before(() => {
       sandBox.stub(document.body, 'appendChild').returns(sandBox.spy());
-      sandBox.stub(notification, 'deleteNotification');
+      sandBox.stub(Notification.prototype, 'deleteNotification');
       sandBox.stub(window, 'setTimeout').returns((callBack) => {
         callBack();
       });
+      sandBox.stub(Notification.prototype, 'addNotificationsEventListeners');
 
+      Notification.prototype.message = 'Une erreur est survenue, veuillez réessayer dans quelques instants';
+    });
+
+    it('#Sould test createNotificationBox', () => {
       const html = `
                     <div class="notif-container-content">
                         <span class="notif-container-close">X</span>
@@ -139,11 +155,12 @@ describe('#Test Notification', () => {
                     </div>
                   `;
 
+      const notification = new Notification();
+
       notification.createNotificationBox();
 
       expect(notification.notifContainer.innerHTML).to.equal(html);
       expect(document.body.appendChild.calledOnce).to.be.true;
-      expect(notification.deleteNotification.calledOnce).to.be.true;
     });
   });
 });
